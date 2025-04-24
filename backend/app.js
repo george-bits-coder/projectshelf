@@ -22,7 +22,7 @@ require('./config/db')();
 
 // Middlewares
 app.use(cors({
-  origin: 'https://project-shelf.web.app/', 
+  origin: 'https://project-shelf.web.app', 
   credentials: true
 }));
 
