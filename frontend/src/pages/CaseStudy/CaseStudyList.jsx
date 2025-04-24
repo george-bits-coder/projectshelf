@@ -26,7 +26,7 @@ export const CaseStudyList = () => {
   useEffect(() => {
     const fetchCaseStudies = async () => {
       try {
-        const res = await axios.get('/api/case-study');
+        const res = await axios.get('https://projectshelf-7g32.onrender.com/api/case-study');
         setCaseStudies(res.data.data);
       } catch (err) {
         console.error(err);
@@ -40,7 +40,7 @@ export const CaseStudyList = () => {
 
   const togglePublish = async (id, published) => {
     try {
-      await axios.put(`/api/case-study/${id}/publish`, { published: !published });
+      await axios.put(`https://projectshelf-7g32.onrender.com/api/case-study/${id}/publish`, { published: !published });
       setCaseStudies(caseStudies.map(cs => 
         cs._id === id ? { ...cs, published: !published } : cs
       ));
@@ -51,7 +51,7 @@ export const CaseStudyList = () => {
 
   const toggleFeature = async (id, featured) => {
     try {
-      await axios.put(`/api/case-study/${id}/feature`, { featured: !featured });
+      await axios.put(`https://projectshelf-7g32.onrender.com/api/case-study/${id}/feature`, { featured: !featured });
       setCaseStudies(caseStudies.map(cs => 
         cs._id === id ? { ...cs, featured: !featured } : cs
       ));
@@ -62,7 +62,7 @@ export const CaseStudyList = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/case-study/${id}`);
+      await axios.delete(`https://projectshelf-7g32.onrender.com/api/case-study/${id}`);
       setCaseStudies(caseStudies.filter(cs => cs._id !== id));
     } catch (err) {
       console.error(err);

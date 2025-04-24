@@ -4,11 +4,11 @@ const MediaSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['image', 'video', 'link'],
-    required: true
+    required: false
   },
   url: {
     type: String,
-    required: true
+    required: false
   },
   caption: String,
   order: Number
@@ -17,7 +17,7 @@ const MediaSchema = new mongoose.Schema({
 const TimelineItemSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true
+    required: false
   },
   description: String,
   date: Date,
@@ -27,7 +27,7 @@ const TimelineItemSchema = new mongoose.Schema({
 const TechnologySchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: false
   },
   icon: String
 });
@@ -36,11 +36,11 @@ const OutcomeSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['metric', 'testimonial'],
-    required: true
+    required: false
   },
   data: {
     type: mongoose.Schema.Types.Mixed,
-    required: true
+    required: false
   }
 });
 
@@ -48,17 +48,17 @@ const CaseStudySchema = new mongoose.Schema({
   portfolio: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Portfolio',
-    required: true
+    required: false
   },
   title: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
     maxlength: [100, 'Title cannot be more than 100 characters']
   },
   slug: {
     type: String,
-    required: true,
+    required: false,
     unique: true
   },
   projectOverview: {

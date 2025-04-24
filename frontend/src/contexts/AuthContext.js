@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
   const loadUser = async () => {
     try {
       setAuthToken(token);
-      const res = await axios.get('http://localhost:5000/api/auth/me');
+      const res = await axios.get('https://projectshelf-7g32.onrender.com/api/auth/me');
       setUser(res.data.data);
     } catch (err) {
       logout();
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
   // Register user
   const register = async (formData) => {
-    const res = await axios.post('http://localhost:5000/api/auth/register', formData,{
+    const res = await axios.post('https://projectshelf-7g32.onrender.com/api/auth/register', formData,{
       withCredentials: true
     });
     setToken(res.data.token);
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
 
   // Login user
   const login = async (formData) => {
-    const res = await axios.post('http://localhost:5000/api/auth/login', formData);
+    const res = await axios.post('https://projectshelf-7g32.onrender.com/api/auth/login', formData);
     setToken(res.data.token);
     await loadUser();
     navigate('/dashboard');
@@ -64,13 +64,13 @@ export const AuthProvider = ({ children }) => {
 
   // Update user details
   const updateDetails = async (formData) => {
-    const res = await axios.put('/api/auth/updatedetails', formData);
+    const res = await axios.put('https://projectshelf-7g32.onrender.com/api/auth/updatedetails', formData);
     setUser(res.data.data);
   };
 
   // Update password
   const updatePassword = async (formData) => {
-    await axios.put('/api/auth/updatepassword', formData);
+    await axios.put('https://projectshelf-7g32.onrender.com/api/auth/updatepassword', formData);
   };
 
   // Check if token is expired

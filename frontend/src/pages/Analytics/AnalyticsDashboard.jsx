@@ -38,7 +38,7 @@ export const AnalyticsDashboard = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const res = await axios.get('/api/analytics/portfolio');
+        const res = await axios.get('https://projectshelf-7g32.onrender.com/api/analytics/portfolio');
         setPortfolioStats(res.data.data);
       } catch (err) {
         console.error(err);
@@ -113,11 +113,27 @@ export const AnalyticsDashboard = () => {
         </TabPanel>
 
         <TabPanel value={value} index={1}>
+          <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Top Case Studies
+                </Typography>
+                <PieChart data={portfolioStats?.topCaseStudies || []} />
+              </Paper>
+            </Grid>
           {/* Case study specific analytics would go here */}
         </TabPanel>
 
         <TabPanel value={value} index={2}>
           {/* Visitor demographics would go here */}
+          <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  Demographics
+                </Typography>
+                <PieChart data={portfolioStats?.topCaseStudies || []} />
+              </Paper>
+            </Grid>
         </TabPanel>
       </Box>
    

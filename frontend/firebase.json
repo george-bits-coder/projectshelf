@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "public": "build",
+    "site":"project-shelf",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/**/*.html",  
+        "destination": "/index.html"  
+      }
+    ]
+  }
+}

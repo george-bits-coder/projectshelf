@@ -11,12 +11,18 @@ import {
   FormControlLabel,
   Grid,
   Avatar,
-  IconButton
+  IconButton,
+  Snackbar,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout';
 import { ThemeSelector } from '../../components/portfolio/ThemeSelector';
 import { useAuth } from '../../contexts/AuthContext';
+
+// API base URL - better to use environment variable
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const PortfolioSchema = Yup.object().shape({
   displayName: Yup.string().required('Required'),
@@ -28,7 +34,15 @@ export const PortfolioEditor = () => {
   const [portfolio, setPortfolio] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [profilePic, setProfilePic] = useState(null);
+  const [profilePicPreview, setProfilePicPreview] = useState(null);
   const [coverPic, setCoverPic] = useState(null);
+  const [coverPicPreview, setCoverPicPreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -48,12 +62,15 @@ export const PortfolioEditor = () => {
     validationSchema: PortfolioSchema,
     onSubmit: async (values) => {
       try {
+        setIsSubmitting(true);
         const formData = new FormData();
+        
+        // Append form fields to FormData
         formData.append('displayName', values.displayName);
         formData.append('bio', values.bio);
         formData.append('socialLinks', JSON.stringify(values.socialLinks));
         formData.append('theme', values.theme);
-        formData.append('published', values.published);
+        formData.append('published', values.published.toString());
         
         if (profilePic) {
           formData.append('profilePicture', profilePic);
@@ -62,14 +79,28 @@ export const PortfolioEditor = () => {
           formData.append('coverImage', coverPic);
         }
 
-        const res = await axios.post('/api/portfolio', formData, {
+        const res = await axios.post(`${API_BASE_URL}/portfolio`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          withCredentials: true // Important for sending cookies/auth tokens
         });
+        
         setPortfolio(res.data.data);
+        setNotification({
+          open: true,
+          message: 'Portfolio successfully updated!',
+          severity: 'success'
+        });
       } catch (err) {
         console.error(err);
+        setNotification({
+          open: true,
+          message: err.response?.data?.error || 'Failed to update portfolio',
+          severity: 'error'
+        });
+      } finally {
+        setIsSubmitting(false);
       }
     }
   });
@@ -77,24 +108,54 @@ export const PortfolioEditor = () => {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const res = await axios.get('/api/portfolio');
-        setPortfolio(res.data.data);
-        formik.setValues({
-          displayName: res.data.data.displayName || '',
-          bio: res.data.data.bio || '',
-          socialLinks: res.data.data.socialLinks || {
-            website: '',
-            twitter: '',
-            linkedin: '',
-            github: '',
-            dribbble: '',
-            behance: ''
-          },
-          theme: res.data.data.theme || 'minimal',
-          published: res.data.data.published || false
+        console.log('Fetching portfolio data...');
+        const res = await axios.get(`${API_BASE_URL}/portfolio`, {
+          withCredentials: true // Important for sending cookies/auth tokens
         });
+        
+        console.log('Portfolio data received:', res.data);
+        
+        if (res.data.success && res.data.data) {
+          const portfolioData = res.data.data;
+          setPortfolio(portfolioData);
+          
+          // Set profile and cover image previews if they exist
+          if (portfolioData.profilePicture) {
+            setProfilePicPreview(portfolioData.profilePicture);
+          }
+          
+          if (portfolioData.coverImage) {
+            setCoverPicPreview(portfolioData.coverImage);
+          }
+          
+          // Initialize form with existing data
+          formik.resetForm({
+            values: {
+              displayName: portfolioData.displayName || '',
+              bio: portfolioData.bio || '',
+              socialLinks: portfolioData.socialLinks || {
+                website: '',
+                twitter: '',
+                linkedin: '',
+                github: '',
+                dribbble: '',
+                behance: ''
+              },
+              theme: portfolioData.theme || 'minimal',
+              published: portfolioData.published || false
+            }
+          });
+        }
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching portfolio:', err);
+        // If it's a 404, that's ok - user just doesn't have a portfolio yet
+        if (err.response?.status !== 404) {
+          setNotification({
+            open: true,
+            message: 'Failed to load portfolio data',
+            severity: 'error'
+          });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -102,37 +163,58 @@ export const PortfolioEditor = () => {
 
     if (user) {
       fetchPortfolio();
+    } else {
+      setIsLoading(false);
     }
   }, [user]);
 
   const handleProfilePicChange = (e) => {
-    setProfilePic(e.target.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProfilePic(file);
+      setProfilePicPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleCoverPicChange = (e) => {
-    setCoverPic(e.target.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setCoverPic(file);
+      setCoverPicPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleThemeChange = (theme) => {
     formik.setFieldValue('theme', theme);
   };
 
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
+  };
+
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-   
+    <>
       <form onSubmit={formik.handleSubmit}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Box display="flex" alignItems="center" mb={2}>
               <Avatar
-                src={profilePic ? URL.createObjectURL(profilePic) : portfolio?.profilePicture}
+                src={profilePicPreview}
                 sx={{ width: 80, height: 80, mr: 2 }}
               />
               <div>
                 <Typography variant="h6">Profile Picture</Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Username: {user?.username}
+                </Typography>
                 <input
                   accept="image/*"
                   id="profile-pic"
@@ -172,10 +254,10 @@ export const PortfolioEditor = () => {
                   Upload Cover Image
                 </Button>
               </label>
-              {coverPic && (
+              {coverPicPreview && (
                 <Box mt={2}>
                   <img
-                    src={URL.createObjectURL(coverPic)}
+                    src={coverPicPreview}
                     alt="Cover preview"
                     style={{ maxWidth: '100%', maxHeight: '200px' }}
                   />
@@ -234,6 +316,28 @@ export const PortfolioEditor = () => {
             />
           </Grid>
 
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              id="socialLinks.linkedin"
+              name="socialLinks.linkedin"
+              label="LinkedIn"
+              value={formik.values.socialLinks.linkedin}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              id="socialLinks.github"
+              name="socialLinks.github"
+              label="GitHub"
+              value={formik.values.socialLinks.github}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
               Theme
@@ -261,12 +365,32 @@ export const PortfolioEditor = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary">
-              Save Changes
+            <Button 
+              type="submit" 
+              variant="contained" 
+              color="primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <CircularProgress size={24} /> : 'Save Changes'}
             </Button>
           </Grid>
         </Grid>
       </form>
-   
+
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };

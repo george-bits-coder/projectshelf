@@ -1,5 +1,74 @@
 const CaseStudy = require('../models/CaseStudy');
 const Portfolio = require('../models/Portfolio');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = './uploads/case-studies';
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`);
+  }
+});
+
+// File filter for image uploads
+const fileFilter = (req, file, cb) => {
+  // Accept images only
+  if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+    return cb(new Error('Only image files are allowed!'), false);
+  }
+  cb(null, true);
+};
+
+// Configure multer upload
+exports.upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+}).array('media', 20); // Maximum 20 files
+
+// Process uploaded files and other form data
+const processFormData = (req) => {
+  const data = {
+    title: req.body.title,
+    slug: req.body.slug,
+    projectOverview: req.body.projectOverview,
+    featured: req.body.featured === 'true',
+    published: req.body.published === 'true',
+    timeline: JSON.parse(req.body.timeline || '[]'),
+    technologies: JSON.parse(req.body.technologies || '[]'),
+    outcomes: JSON.parse(req.body.outcomes || '[]'),
+    mediaGallery: []
+  };
+
+  // Process media files
+  const mediaItems = [];
+  const mediaKeys = Object.keys(req.body).filter(key => key.match(/media-\d+-data/));
+  
+  mediaKeys.forEach(key => {
+    const index = key.match(/media-(\d+)-data/)[1];
+    const mediaData = JSON.parse(req.body[key]);
+    
+    // Check if we have a file upload for this index
+    if (req.files && req.files.some(file => file.fieldname === `media-${index}`)) {
+      const file = req.files.find(file => file.fieldname === `media-${index}`);
+      mediaData.url = `/uploads/case-studies/${file.filename}`;
+    }
+    
+    mediaItems.push(mediaData);
+  });
+
+  data.mediaGallery = mediaItems;
+  return data;
+};
 
 // @desc    Get all case studies for a portfolio
 // @route   GET /api/case-study
@@ -24,6 +93,7 @@ exports.getCaseStudies = async (req, res, next) => {
       data: caseStudies
     });
   } catch (err) {
+    console.error('Error in getCaseStudies:', err);
     next(err);
   }
 };
@@ -59,6 +129,7 @@ exports.getCaseStudy = async (req, res, next) => {
       data: caseStudy
     });
   } catch (err) {
+    console.error('Error in getCaseStudy:', err);
     next(err);
   }
 };
@@ -77,14 +148,29 @@ exports.createCaseStudy = async (req, res, next) => {
       });
     }
 
-    req.body.portfolio = portfolio._id;
-    const caseStudy = await CaseStudy.create(req.body);
+    // Process form data
+    
+    const caseStudyData = processFormData(req);
+    caseStudyData.portfolio = portfolio._id;
+
+    const caseStudy = await CaseStudy.create(caseStudyData);
 
     res.status(201).json({
       success: true,
       data: caseStudy
     });
   } catch (err) {
+    console.error('Error in createCaseStudy:', err);
+    
+    // Handle validation errors specifically
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(val => val.message);
+      return res.status(400).json({
+        success: false,
+        error: messages.join(', ')
+      });
+    }
+    
     next(err);
   }
 };
@@ -115,7 +201,10 @@ exports.updateCaseStudy = async (req, res, next) => {
       });
     }
 
-    caseStudy = await CaseStudy.findByIdAndUpdate(req.params.id, req.body, {
+    // Process form data
+    const caseStudyData = processFormData(req);
+
+    caseStudy = await CaseStudy.findByIdAndUpdate(req.params.id, caseStudyData, {
       new: true,
       runValidators: true
     });
@@ -125,6 +214,17 @@ exports.updateCaseStudy = async (req, res, next) => {
       data: caseStudy
     });
   } catch (err) {
+    console.error('Error in updateCaseStudy:', err);
+    
+    // Handle validation errors specifically
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(val => val.message);
+      return res.status(400).json({
+        success: false,
+        error: messages.join(', ')
+      });
+    }
+    
     next(err);
   }
 };
@@ -155,6 +255,18 @@ exports.deleteCaseStudy = async (req, res, next) => {
       });
     }
 
+    // Delete associated media files if needed
+    if (caseStudy.mediaGallery && caseStudy.mediaGallery.length > 0) {
+      caseStudy.mediaGallery.forEach(media => {
+        if (media.url) {
+          const filePath = path.join(__dirname, '..', media.url);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }
+      });
+    }
+
     await caseStudy.remove();
 
     res.status(200).json({
@@ -162,6 +274,7 @@ exports.deleteCaseStudy = async (req, res, next) => {
       data: {}
     });
   } catch (err) {
+    console.error('Error in deleteCaseStudy:', err);
     next(err);
   }
 };
@@ -200,6 +313,7 @@ exports.togglePublishCaseStudy = async (req, res, next) => {
       data: caseStudy
     });
   } catch (err) {
+    console.error('Error in togglePublishCaseStudy:', err);
     next(err);
   }
 };
@@ -238,6 +352,7 @@ exports.toggleFeatureCaseStudy = async (req, res, next) => {
       data: caseStudy
     });
   } catch (err) {
+    console.error('Error in toggleFeatureCaseStudy:', err);
     next(err);
   }
 };

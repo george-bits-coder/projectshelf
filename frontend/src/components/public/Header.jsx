@@ -10,7 +10,7 @@ export const Header = () => {
     <AppBar  position="static" sx={{ height: '64px' }}>
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>
+          <Link to="/dashboard" style={{ color: 'inherit', textDecoration: 'none' }}>
             ProjectShelf
           </Link>
         </Typography>

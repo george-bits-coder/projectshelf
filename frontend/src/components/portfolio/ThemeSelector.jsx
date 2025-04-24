@@ -1,35 +1,111 @@
 import React from 'react';
-import { Box, Typography, Grid, Paper } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardActionArea,
+  CardContent,
+  Typography,
+  Grid,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  useTheme
+} from '@mui/material';
+import { LightMode, DarkMode, Palette } from '@mui/icons-material';
+
+const themes = [
+  {
+    id: 'minimal',
+    name: 'Minimal',
+    icon: Palette,
+    description: 'Clean and minimal design'
+  },
+  {
+    id: 'light',
+    name: 'Light',
+    icon: LightMode,
+    description: 'Bright and modern feel'
+  },
+  {
+    id: 'dark',
+    name: 'Dark',
+    icon: DarkMode,
+    description: 'Elegant dark appearance'
+  }
+];
 
 export const ThemeSelector = ({ selectedTheme, onThemeChange }) => {
-  const themes = [
-    { id: 'light', name: 'Light', bg: '#ffffff', text: '#121212' },
-    { id: 'dark', name: 'Dark', bg: '#121212', text: '#ffffff' },
-    { id: 'minimal', name: 'Minimal', bg: '#f5f5f5', text: '#333333' }
-  ];
+  const theme = useTheme();
+
+  const handleChange = (event) => {
+    if (onThemeChange) {
+      onThemeChange(event.target.value);
+    }
+  };
 
   return (
-    <Box>
+    <RadioGroup 
+      name="theme-selector"
+      value={selectedTheme}
+      onChange={handleChange}
+    >
       <Grid container spacing={2}>
-        {themes.map((theme) => (
-          <Grid item xs={12} sm={4} key={theme.id}>
-            <Paper
-              elevation={selectedTheme === theme.id ? 4 : 1}
-              onClick={() => onThemeChange(theme.id)}
-              sx={{
-                p: 2,
-                cursor: 'pointer',
-                bgcolor: theme.bg,
-                color: theme.text,
-                border: selectedTheme === theme.id ? '2px solid primary.main' : 'none'
-              }}
-            >
-              <Typography variant="h6">{theme.name}</Typography>
-              <Box sx={{ height: '100px', bgcolor: theme.bg }} />
-            </Paper>
-          </Grid>
-        ))}
+        {themes.map((item) => {
+          const Icon = item.icon;
+          const isSelected = selectedTheme === item.id;
+
+          return (
+            <Grid item xs={12} sm={4} key={item.id}>
+              <FormControlLabel
+                value={item.id}
+                control={<Radio style={{ display: 'none' }} />}
+                label=""
+                sx={{ margin: 0, width: '100%' }}
+              />
+              <Card
+                sx={{
+                  height: '100%',
+                  border: isSelected 
+                    ? `2px solid ${theme.palette.primary.main}` 
+                    : '2px solid transparent',
+                  boxShadow: isSelected ? 3 : 1,
+                  transition: 'all 0.3s ease',
+                  opacity: isSelected ? 1 : 0.7
+                }}
+              >
+                <CardActionArea
+                  onClick={() => onThemeChange(item.id)}
+                  sx={{ height: '100%' }}
+                >
+                  <CardContent>
+                    <Box 
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        mb: 1
+                      }}
+                    >
+                      <Icon 
+                        color={isSelected ? "primary" : "action"} 
+                        sx={{ mr: 1 }} 
+                      />
+                      <Typography 
+                        variant="h6" 
+                        color={isSelected ? "primary" : "textPrimary"}
+                      >
+                        {item.name}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="textSecondary">
+                      {item.description}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
-    </Box>
+    </RadioGroup>
   );
 };

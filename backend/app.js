@@ -12,9 +12,11 @@ const authRoutes = require('./routes/authRoutes');
 const portfolioRoutes = require('./routes/portfolioRoutes');
 const caseStudyRoutes = require('./routes/caseStudyRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
-
+const path = require('path');
 const app = express();
 app.use(cookieParser());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Database connection
 require('./config/db')();
 
@@ -36,7 +38,19 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+
+const fs = require('fs');
+if (!fs.existsSync('./uploads')) {
+  fs.mkdirSync('./uploads');
+}
+if (!fs.existsSync('./uploads/case-studies')) {
+  fs.mkdirSync('./uploads/case-studies', { recursive: true });
+}
 // Routes
+
+app.get('/hello', (req, res) => {
+  res.status(200).json({ message: 'hello' });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/case-study', caseStudyRoutes);
@@ -44,6 +58,11 @@ app.use('/api/analytics', analyticsRoutes);
 
 // Public portfolio route
 app.use('/', require('./routes/publicRoutes'));
+
+// app.get("/hello",async(req,res)=>{
+
+//   res.status(200).send({"message":"hi"})
+// })
 
 // Error handling middleware
 app.use(errorHandler);
