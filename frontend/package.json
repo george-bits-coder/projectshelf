@@ -1,0 +1,50 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^5.11.0",
+    "@mui/material": "^5.17.1",
+    "@nivo/core": "^0.79.0",
+    "@nivo/line": "^0.79.0",
+    "@nivo/pie": "^0.79.0",
+    "ajv": "^8.11.0",
+    "axios": "^1.2.1",
+    "chart.js": "^4.0.1",
+    "date-fns": "^2.29.3",
+    "formik": "^2.2.9",
+    "jwt-decode": "^3.1.2",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.0.1",
+    "react-dom": "^18.2.0",
+    "react-dropzone": "^14.2.3",
+    "react-helmet": "^6.1.0",
+    "react-markdown": "^8.0.5",
+    "react-quill": "^2.0.0",
+    "react-router-dom": "^6.4.5",
+    "react-scripts": "5.0.1",
+    "react-syntax-highlighter": "^15.5.0",
+    "styled-components": "^5.3.6",
+    "yup": "^0.32.11"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
