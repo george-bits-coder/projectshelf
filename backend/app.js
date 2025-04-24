@@ -22,7 +22,7 @@ require('./config/db')();
 
 // Middlewares
 app.use(cors({
-  origin: 'http://localhost:3000', 
+  origin: 'https://project-shelf.web.app/', 
   credentials: true
 }));
 
